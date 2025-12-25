@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-VOTING | SYSTEM BY RIVQI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        noxa: {
+                            dark: '#0f172a',
+                            light: '#1e293b',
+                            accent: '#3b82f6',
+                            danger: '#ef4444',
+                            success: '#22c55e'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .title-font { font-family: 'Orbitron', sans-serif; }
+
+        /* Scrollbar Kustom */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+
+        /* Floating Music Player */
+        .floating-player {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            transition: all 0.3s ease;
+        }
+
+        /* Card Hover Effect */
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-sm md:text-base">
+
+    <audio id="bgMusic" loop>
+        <source src="https://files.catbox.moe/e9igjg.mp3" type="audio/mpeg">
+    </audio>
+    <div class="floating-player glass p-3 rounded-full cursor-pointer flex items-center gap-2 hover:bg-blue-600/50" onclick="toggleMusic()">
+        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center animate-pulse-fast">
+            <i class="fas fa-music text-white" id="musicIcon"></i>
+        </div>
+        <span class="hidden md:block font-bold text-xs pr-2">RIVQI LOGIC</span>
+    </div>
+
+    <nav class="glass sticky top-0 z-50 border-b border-gray-700/50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-biohazard text-blue-500 text-2xl md:text-3xl animate-spin-slow"></i>
+                    <div>
+                        <h1 class="title-font font-bold text-lg md:text-xl tracking-wider text-white">E-VOTE <span class="text-blue-500">PAPER_ROPE4</span></h1>
+                        <p class="text-[10px] text-gray-400 leading-none">SYSTEM VER 0.0.1</p>
+                    </div>
+                </div>
+
+                <div id="desktopMenu" class="hidden md:flex items-center gap-4">
+                    <span id="userGreeting" class="text-gray-300 font-semibold border-r border-gray-600 pr-4">Guest</span>
+                    <button onclick="logout()" id="logoutBtn" class="hidden bg-red-600/80 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                        <i class="fas fa-power-off"></i> KELUAR
+                    </button>
+                </div>
+
+                <button onclick="toggleMobileMenu()" class="md:hidden text-2xl text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <div id="mobileMenu" class="hidden md:hidden mt-4 border-t border-gray-700 pt-4 space-y-3 pb-2">
+                <div id="mobileGreeting" class="text-center text-gray-400 text-sm italic">Belum Login</div>
+                <button onclick="logout()" id="mobileLogoutBtn" class="hidden w-full bg-red-600 text-white py-2 rounded font-bold">LOGOUT SEKARANG</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto px-4 py-6 md:py-10">
+        
+        <section id="loginSection" class="flex flex-col items-center justify-center min-h-[60vh]">
+            <div class="glass p-6 md:p-8 rounded-2xl w-full max-w-sm md:max-w-md shadow-2xl border-t-4 border-blue-500">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                        <i class="fas fa-fingerprint text-4xl text-blue-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold title-font">OTENTIKASI</h2>
+                    <p class="text-gray-400 text-sm">Masukkan kredensial untuk akses sistem.</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1 ml-1">IDENTITAS (USERNAME)</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-3 top-3.5 text-gray-500"></i>
+                            <input type="text" id="username" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" placeholder="Contoh: SISWA001">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1 ml-1">KODE AKSES (PASSWORD)</label>
+                        <div class="relative">
+                            <i class="fas fa-key absolute left-3 top-3.5 text-gray-500"></i>
+                            <input type="password" id="password" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" placeholder="********">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition-all duration-200">
+                        LOGIN <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center border-t border-gray-700/50 pt-4">
+                    <p class="text-xs text-gray-500">Sistem diamankan oleh RIVQI Protocol.<br>Sistem Default: <span class="text-blue-400">Encryp / admin</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="votingSection" class="hidden">
+            <div class="text-center mb-8 md:mb-12">
+                <span class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/20">PERIODE 2025/2026</span>
+                <h2 class="text-2xl md:text-4xl font-bold mt-3 title-font text-white">PILIH PEMIMPIN LO</h2>
+                <p class="text-gray-400 mt-2 text-sm md:text-base max-w-2xl mx-auto">Satu suara menentukan nasib sekolah. Jangan golput, jangan asal pilih. Baca visi misinya, rasakan auranya.</p>
+            </div>
+
+            <div id="candidatesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-20">
+                </div>
+        </section>
+
+        <section id="adminSection" class="hidden">
+            <div class="flex flex-col lg:flex-row gap-6 h-full">
+                
+                <div class="w-full lg:w-64 flex-shrink-0">
+                    <div class="glass rounded-xl p-4 sticky top-24">
+                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700">
+                            <div class="w-10 h-10 rounded bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center font-bold text-lg">A</div>
+                            <div>
+                                <h3 class="font-bold">ADMIN PANEL</h3>
+                                <p class="text-xs text-green-400 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online</p>
+                            </div>
+                        </div>
+                        
+                        <nav class="space-y-1">
+                            <button onclick="switchTab('dashboard')" class="admin-tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition flex items-center gap-3 bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                                <i class="fas fa-chart-pie w-5"></i> Dashboard
+                            </button>
+                            <button onclick="switchTab('candidates')" class="admin-tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition flex items-center gap-3">
+                                <i class="fas fa-users-cog w-5"></i> Kandidat
+                            </button>
+                            <button onclick="switchTab('users')" class="admin-tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition flex items-center gap-3">
+                                <i class="fas fa-users w-5"></i> Data Pemilih
+                            </button>
+                            <button onclick="switchTab('logs')" class="admin-tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition flex items-center gap-3">
+                                <i class="fas fa-clipboard-list w-5"></i> Log Aktivitas
+                            </button>
+                            <button onclick="resetData()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-900/20 text-red-400 hover:text-red-300 transition flex items-center gap-3 mt-4 border border-transparent hover:border-red-500/30">
+                                <i class="fas fa-trash-alt w-5"></i> WIPE DATA
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="flex-grow space-y-6">
+                    
+                    <div id="tab-dashboard" class="admin-content glass rounded-xl p-4 md:p-6">
+                        <div class="flex justify-between items-end mb-6">
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold title-font">LIVE RESULT</h2>
+                                <p class="text-sm text-gray-400">Data diperbarui secara realtime.</p>
+                            </div>
+                            <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-500 text-white text-xs md:text-sm px-3 py-2 rounded shadow flex items-center gap-2">
+                                <i class="fas fa-file-excel"></i> Export CSV
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <div class="text-gray-400 text-xs uppercase font-bold">Total Pemilih</div>
+                                <div class="text-2xl font-bold text-white mt-1" id="statTotal">0</div>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <div class="text-gray-400 text-xs uppercase font-bold">Sudah Memilih</div>
+                                <div class="text-2xl font-bold text-green-400 mt-1" id="statVoted">0</div>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <div class="text-gray-400 text-xs uppercase font-bold">Belum Memilih</div>
+                                <div class="text-2xl font-bold text-red-400 mt-1" id="statPending">0</div>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <div class="text-gray-400 text-xs uppercase font-bold">Partisipasi</div>
+                                <div class="text-2xl font-bold text-blue-400 mt-1" id="statPercent">0%</div>
+                            </div>
+                        </div>
+
+                        <div class="relative h-64 md:h-80 w-full flex justify-center items-center bg-slate-900/30 rounded-lg p-4">
+                            <canvas id="voteChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="tab-candidates" class="hidden admin-content glass rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-4 border-b border-gray-700 pb-2">MANAJEMEN KANDIDAT</h2>
+                        
+                        <form onsubmit="addCandidate(event)" class="bg-slate-800/50 p-4 rounded-lg mb-6 border border-slate-700">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="candName" placeholder="Nama Paslon" class="bg-slate-900 border border-slate-600 rounded p-2 text-white w-full" required>
+                                <input type="text" id="candImg" placeholder="URL Foto (https://...)" class="bg-slate-900 border border-slate-600 rounded p-2 text-white w-full" required>
+                            </div>
+                            <textarea id="candVisi" placeholder="Visi Misi Singkat..." class="bg-slate-900 border border-slate-600 rounded p-2 text-white w-full mt-4 h-20" required></textarea>
+                            <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold w-full md:w-auto">
+                                <i class="fas fa-plus mr-1"></i> TAMBAH PASLON
+                            </button>
+                        </form>
+
+                        <div id="adminCandidateList" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div id="tab-users" class="hidden admin-content glass rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-4 border-b border-gray-700 pb-2">MANAJEMEN PEMILIH</h2>
+                        
+                        <div class="flex flex-col md:flex-row gap-4 mb-6 bg-slate-800/50 p-4 rounded-lg">
+                            <div class="flex-grow">
+                                <label class="text-xs text-gray-400 block mb-1">Jumlah Token</label>
+                                <input type="number" id="genCount" class="bg-slate-900 border border-slate-600 rounded p-2 text-white w-full" placeholder="ex: 50">
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button onclick="generateUsers()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold flex-grow">
+                                    <i class="fas fa-magic mr-1"></i> GENERATE
+                                </button>
+                                <button onclick="printUsers()" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded font-bold">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-lg border border-gray-700">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-800 text-gray-300 uppercase font-bold">
+                                    <tr>
+                                        <th class="px-4 py-3">Username</th>
+                                        <th class="px-4 py-3">Password</th>
+                                        <th class="px-4 py-3">Status</th>
+                                        <th class="px-4 py-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody" class="divide-y divide-gray-700 bg-slate-900/30">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-logs" class="hidden admin-content glass rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-4 border-b border-gray-700 pb-2">SYSTEM LOGS</h2>
+                        <div class="bg-black/40 rounded p-4 h-96 overflow-y-auto font-mono text-xs md:text-sm text-green-400" id="logContainer">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 text-gray-600 text-xs border-t border-gray-800/50 mt-auto">
+        <p>ENGINEERED BY <span class="text-blue-500 font-bold tracking-widest">PAPER_ROOE4</span></p>
+        <p class="mt-1 opacity-50">Secure • Security • Safe</p>
+    </footer>
+
+    <script>
+        // ==========================================
+        // DATA STORE & STATE
+        // ==========================================
+        const DB = {
+            candidates: JSON.parse(localStorage.getItem('noxa_candidates')) || [
+                { id: 1, name: "KETUA 1: ZEUS & HERA", visi: "Meningkatkan fasilitas & WiFi kenceng 24 jam.", img: "https://cdn-icons-png.flaticon.com/512/4140/4140048.png", votes: 0 },
+                { id: 2, name: "KETUA 2: HADES & ARES", visi: "Disiplin keras, melanggar langsung DO.", img: "https://cdn-icons-png.flaticon.com/512/4140/4140037.png", votes: 0 }
+            ],
+            users: JSON.parse(localStorage.getItem('noxa_users')) || [],
+            logs: JSON.parse(localStorage.getItem('noxa_logs')) || [],
+            session: JSON.parse(localStorage.getItem('noxa_session')) || null
+        };
+
+        // ==========================================
+        // SYSTEM INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshUI();
+            addLog("System initialized. Waiting for input...", "SYSTEM");
+        });
+
+        function saveDB() {
+            localStorage.setItem('noxa_candidates', JSON.stringify(DB.candidates));
+            localStorage.setItem('noxa_users', JSON.stringify(DB.users));
+            localStorage.setItem('noxa_logs', JSON.stringify(DB.logs));
+            localStorage.setItem('noxa_session', JSON.stringify(DB.session));
+        }
+
+        function addLog(msg, type = "INFO") {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] [${type}] ${msg}`;
+            DB.logs.unshift(logEntry);
+            if (DB.logs.length > 100) DB.logs.pop(); // Keep only last 100 logs
+            saveDB();
+            renderLogs();
+        }
+
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+
+            // Admin Backdoor
+            if (u === 'rifuki' && p === 'Ffmabar123@#$') {
+                DB.session = { username: 'ADMIN', role: 'admin' };
+                addLog("Admin logged in successfully", "AUTH");
+                completeLogin();
+                return;
+            }
+
+            // User Verification
+            const user = DB.users.find(x => x.username === u && x.password === p);
+            if (user) {
+                DB.session = { ...user, role: 'user' };
+                addLog(`User ${u} logged in`, "AUTH");
+                completeLogin();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'AKSES DITOLAK',
+                    text: 'Username atau Password salah!',
+                    background: '#1e293b',
+                    color: '#fff'
+                });
+                addLog(`Failed login attempt: ${u}`, "WARNING");
+            }
+        }
+
+        function completeLogin() {
+            saveDB();
+            refreshUI();
+            Swal.fire({
+                icon: 'success',
+                title: 'Welcome Back',
+                text: 'Akses diberikan.',
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#1e293b',
+                color: '#fff'
+            });
+        }
+
+        function logout() {
+            addLog(`User ${DB.session.username} logged out`, "AUTH");
+            DB.session = null;
+            saveDB();
+            refreshUI();
+            toggleMobileMenu(true); // close menu if open
+        }
+
+        // ==========================================
+        // UI MANAGEMENT
+        // ==========================================
+        function refreshUI() {
+            // Reset Views
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('votingSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            document.getElementById('mobileLogoutBtn').classList.add('hidden');
+
+            if (!DB.session) {
+                // Not Logged In
+                document.getElementById('loginSection').classList.remove('hidden');
+                document.getElementById('userGreeting').innerText = "Guest";
+                document.getElementById('mobileGreeting').innerText = "Belum Login";
+            } else {
+                // Logged In
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                document.getElementById('mobileLogoutBtn').classList.remove('hidden');
+                document.getElementById('userGreeting').innerText = DB.session.username;
+                document.getElementById('mobileGreeting').innerText = `Hai, ${DB.session.username}`;
+
+                if (DB.session.role === 'admin') {
+                    document.getElementById('adminSection').classList.remove('hidden');
+                    switchTab('dashboard'); // Load dashboard default
+                } else {
+                    document.getElementById('votingSection').classList.remove('hidden');
+                    renderVotingPage();
+                }
+            }
+        }
+
+        function toggleMobileMenu(forceClose = false) {
+            const menu = document.getElementById('mobileMenu');
+            if (forceClose) {
+                menu.classList.add('hidden');
+            } else {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        // ==========================================
+        // VOTING LOGIC
+        // ==========================================
+        function renderVotingPage() {
+            const container = document.getElementById('candidatesContainer');
+            container.innerHTML = '';
+            
+            // Check Live Status form DB to ensure freshness
+            const currentUser = DB.users.find(u => u.username === DB.session.username);
+            
+            if (currentUser && currentUser.hasVoted) {
+                container.innerHTML = `
+                    <div class="col-span-1 md:col-span-3 text-center py-20 animate-pulse">
+                        <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+                        <h2 class="text-3xl font-bold text-white">SUARA TERCATAT</h2>
+                        <p class="text-gray-400 mt-2">Terima kasih telah berpartisipasi. Anda bisa logout sekarang.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            DB.candidates.forEach(c => {
+                container.innerHTML += `
+                    <div class="glass rounded-xl overflow-hidden hover-card transition-all duration-300 flex flex-col h-full">
+                        <div class="h-48 md:h-56 overflow-hidden relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent z-10"></div>
+                            <img src="${c.img}" alt="${c.name}" class="w-full h-full object-cover">
+                            <div class="absolute bottom-2 left-4 z-20">
+                                <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-bold">NO. URUT ${c.id}</span>
+                            </div>
+                        </div>
+                        <div class="p-6 flex flex-col flex-grow">
+                            <h3 class="text-xl font-bold text-white mb-2 leading-tight">${c.name}</h3>
+                            <p class="text-gray-400 text-sm mb-6 flex-grow border-l-2 border-blue-500 pl-3 italic">"${c.visi}"</p>
+                            <button onclick="confirmVote(${c.id})" class="w-full bg-slate-700 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-colors border border-slate-600 hover:border-blue-500 group">
+                                COBLOS SEKARANG <i class="fas fa-box-open ml-2 group-hover:animate-bounce"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function confirmVote(candidateId) {
+            const candidate = DB.candidates.find(c => c.id === candidateId);
+            Swal.fire({
+                title: 'Yakin pilih dia?',
+                text: `Anda akan memilih ${candidate.name}. Pilihan tidak bisa diubah!`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'YA, LAKUKAN!',
+                background: '#1e293b',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processVote(candidateId);
+                }
+            });
+        }
+
+        function processVote(id) {
+            // Update Candidate Vote
+            const cIdx = DB.candidates.findIndex(c => c.id === id);
+            DB.candidates[cIdx].votes++;
+
+            // Update User Status
+            const uIdx = DB.users.findIndex(u => u.username === DB.session.username);
+            DB.users[uIdx].hasVoted = true;
+
+            addLog(`User ${DB.session.username} voted for Candidate ${id}`, "VOTE");
+            saveDB();
+            refreshUI();
+
+            Swal.fire({
+                title: 'BERHASIL!',
+                text: 'Suara anda telah diamankan dalam blockchain (bohong, di localStorage doang tapi aman).',
+                icon: 'success',
+                background: '#1e293b',
+                color: '#fff'
+            });
+        }
+
+        // ==========================================
+        // ADMIN LOGIC
+        // ==========================================
+        function switchTab(tab) {
+            // Hide all contents
+            document.querySelectorAll('.admin-content').forEach(el => el.classList.add('hidden'));
+            // Remove active style from buttons
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600/20', 'text-blue-400', 'border', 'border-blue-500/30');
+                btn.classList.add('text-gray-300');
+            });
+
+            // Show selected
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            
+            // Highlight button (Need simple logic to find which button was clicked, or hardcode index)
+            // For simplicity in this single file, we skip button highlight update logic or use simple class add
+            
+            if (tab === 'dashboard') updateChart();
+            if (tab === 'candidates') renderAdminCandidates();
+            if (tab === 'users') renderUserTable();
+            if (tab === 'logs') renderLogs();
+        }
+
+        // --- DASHBOARD ---
+        let chartInstance = null;
+        function updateChart() {
+            const ctx = document.getElementById('voteChart').getContext('2d');
+            
+            const totalUsers = DB.users.length;
+            const votedUsers = DB.users.filter(u => u.hasVoted).length;
+            
+            // Update Numbers
+            document.getElementById('statTotal').innerText = totalUsers;
+            document.getElementById('statVoted').innerText = votedUsers;
+            document.getElementById('statPending').innerText = totalUsers - votedUsers;
+            document.getElementById('statPercent').innerText = totalUsers === 0 ? '0%' : Math.round((votedUsers/totalUsers)*100) + '%';
+
+            // Chart Data
+            const labels = DB.candidates.map(c => c.name.split(':')[0]); // Short name
+            const data = DB.candidates.map(c => c.votes);
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'white', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // --- CANDIDATES ---
+        function renderAdminCandidates() {
+            const list = document.getElementById('adminCandidateList');
+            list.innerHTML = '';
+            DB.candidates.forEach((c, idx) => {
+                list.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-900/40 p-3 rounded border border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <img src="${c.img}" class="w-10 h-10 rounded object-cover">
+                            <div>
+                                <div class="font-bold text-sm text-white">${c.name}</div>
+                                <div class="text-xs text-gray-400">Suara: ${c.votes}</div>
+                            </div>
+                        </div>
+                        <button onclick="deleteCandidate(${idx})" class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function addCandidate(e) {
+            e.preventDefault();
+            const newC = {
+                id: DB.candidates.length + 1,
+                name: document.getElementById('candName').value,
+                img: document.getElementById('candImg').value,
+                visi: document.getElementById('candVisi').value,
+                votes: 0
+            };
+            DB.candidates.push(newC);
+            addLog(`Admin added candidate: ${newC.name}`, "ADMIN");
+            saveDB();
+            renderAdminCandidates();
+            e.target.reset();
+        }
+
+        function deleteCandidate(idx) {
+            if(confirm('Hapus kandidat? Suara akan hilang!')) {
+                const name = DB.candidates[idx].name;
+                DB.candidates.splice(idx, 1);
+                addLog(`Admin deleted candidate: ${name}`, "ADMIN");
+                saveDB();
+                renderAdminCandidates();
+            }
+        }
+
+        // --- USERS ---
+        function generateUsers() {
+            const count = parseInt(document.getElementById('genCount').value);
+            if (!count) return;
+
+            for(let i=0; i<count; i++) {
+                const rnd = Math.floor(1000 + Math.random() * 9000);
+                const pwd = Math.random().toString(36).slice(-6).toUpperCase();
+                DB.users.push({
+                    username: `SISWA${rnd}`,
+                    password: pwd,
+                    hasVoted: false
+                });
+            }
+            saveDB();
+            renderUserTable();
+            addLog(`Generated ${count} new users`, "ADMIN");
+            Swal.fire('Sukses', `${count} User dibuat!`, 'success');
+        }
+
+        function renderUserTable() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            // Limit display to last 50 to prevent lag on big data
+            const displayUsers = DB.users.slice().reverse().slice(0, 50);
+            
+            displayUsers.forEach(u => {
+                const statusBadge = u.hasVoted 
+                    ? '<span class="px-2 py-1 bg-green-900 text-green-400 rounded text-xs">Voted</span>' 
+                    : '<span class="px-2 py-1 bg-red-900 text-red-400 rounded text-xs">Pending</span>';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-4 py-2 font-mono text-gray-300">${u.username}</td>
+                        <td class="px-4 py-2 font-mono text-gray-500 select-all">${u.password}</td>
+                        <td class="px-4 py-2">${statusBadge}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-white"><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(DB.users.length > 50) {
+                tbody.innerHTML += `<tr><td colspan="4" class="text-center text-gray-500 py-2">... dan ${DB.users.length - 50} data lainnya ...</td></tr>`;
+            }
+        }
+
+        function deleteUser(username) {
+            DB.users = DB.users.filter(u => u.username !== username);
+            saveDB();
+            renderUserTable();
+        }
+
+        // --- UTILS ---
+        function resetData() {
+            Swal.fire({
+                title: 'RESET PABRIK?',
+                text: "Semua data akan hilang permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'RESET NOW'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    localStorage.removeItem('noxa_candidates');
+                    localStorage.removeItem('noxa_users');
+                    localStorage.removeItem('noxa_logs');
+                    location.reload();
+                }
+            });
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logContainer');
+            container.innerHTML = DB.logs.map(l => `<div>> ${l}</div>`).join('');
+        }
+
+        function exportToCSV() {
+            // Header
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Username,Status Vote,Waktu (Log)\n";
+            
+            // Data
+            DB.users.forEach(u => {
+                const row = `${u.username},${u.hasVoted ? 'Sudah' : 'Belum'},-`;
+                csvContent += row + "\n";
+            });
+
+            // Download
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "rekap_voting_noxa.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            const icon = document.getElementById('musicIcon');
+            if(audio.paused) {
+                audio.play();
+                icon.className = "fas fa-pause text-white";
+            } else {
+                audio.pause();
+                icon.className = "fas fa-music text-white";
+            }
+        }
+    </script>
+</body>
+</html>
